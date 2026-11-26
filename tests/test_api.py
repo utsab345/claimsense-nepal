@@ -101,3 +101,27 @@ def test_application_seeds_synthetic_dataset(tmp_path):
     assert page.status_code == 200
     assert page.json()["total"] == 2500
     engine.dispose()
+
+
+def test_assessment_is_explained_and_never_changes_claim_status(client):
+    payload = claim_payload()
+    payload.update(
+        {
+            "claim_amount": 1_600_000,
+            "previous_claim_count": 4,
+            "days_since_policy_start": 10,
+            "incident_hour": 2,
+            "supporting_documents_count": 0,
+        }
+    )
+    assert client.post("/claims", json=payload).status_code == 201
+
+    result = client.post("/claims/CLM-API-1/assess")
+
+    assert result.status_code == 200
+    assert result.json()["review_priority"] == "High"
+    assert result.json()["risk_score"] == 90
+    claim = client.get("/claims/CLM-API-1").json()
+    assert claim["claim_status"] == "Open"
+    assert claim["risk_indicators"]
+    assert client.get("/claims/high-risk").json()[0]["claim_id"] == "CLM-API-1"

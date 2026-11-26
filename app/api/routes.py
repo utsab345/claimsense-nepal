@@ -1,10 +1,14 @@
+from sqlalchemy import select
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.analytics.risk import RiskEngine
 from app.analytics.service import overview, risk_distribution, trends
 from app.database.session import get_db
+from app.models import Claim
 from app.schemas.claim import ClaimCreate, ClaimPage, ClaimRead, ClaimStatus, ReviewPriority
+from app.schemas.claim import RiskAssessment
 from app.services.claims import create_claim, get_claim, get_high_risk_claims, list_claims
 
 
@@ -59,6 +63,21 @@ def claim_detail(claim_id: str, session: Session = Depends(get_db)):
     if claim is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Claim not found")
     return claim
+
+
+@router.post("/claims/{claim_id}/assess", response_model=RiskAssessment)
+def assess_claim(claim_id: str, session: Session = Depends(get_db)):
+    claim = get_claim(session, claim_id)
+    if claim is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Claim not found")
+    history = session.scalars(select(Claim).where(Claim.claim_id != claim_id)).all()
+    assessment = RiskEngine().assess(claim, history)
+    claim.risk_score = assessment.risk_score
+    claim.review_priority = assessment.review_priority
+    claim.is_anomaly = assessment.is_anomaly
+    claim.risk_indicators = [indicator.model_dump() for indicator in assessment.risk_indicators]
+    session.commit()
+    return assessment
 
 
 @router.post("/claims", response_model=ClaimRead, status_code=status.HTTP_201_CREATED)
