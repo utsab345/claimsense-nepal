@@ -1,1 +1,3 @@
-"""SQLAlchemy ORM models."""
+from app.models.claim import Claim
+
+__all__ = ["Claim"]

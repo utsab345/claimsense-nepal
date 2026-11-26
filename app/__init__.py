@@ -1,1 +1,0 @@
-"""ClaimSense Nepal application package."""
