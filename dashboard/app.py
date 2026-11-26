@@ -25,9 +25,9 @@ def api_get(path: str, params: dict[str, Any] | None = None):
     return response.json()
 
 
-def api_post(path: str):
+def api_post(path: str, payload: dict[str, Any] | None = None):
     try:
-        response = httpx.post(f"{API_BASE_URL}{path}", timeout=60)
+        response = httpx.post(f"{API_BASE_URL}{path}", json=payload, timeout=60)
     except httpx.HTTPError as error:
         st.error(f"Cannot reach the claims API at {API_BASE_URL}: {error}")
         st.stop()
@@ -190,20 +190,50 @@ def render_trends():
             st.plotly_chart(px.pie(statuses, names="claim_status", values="claim_count", hole=0.45), use_container_width=True)
 
 
+def render_assistant():
+    st.title("Claims data assistant")
+    st.caption("Answers are calculated from approved database queries. No generated SQL or external LLM is used.")
+    with st.expander("Questions you can ask"):
+        st.write(
+            "How many claims have high review priority? "
+            "What is the average claim amount? "
+            "Which incident types have the highest claim amounts? "
+            "Why was claim CLM-00012 flagged? "
+            "Show unusual claims with missing documents. "
+            "What patterns appear in claims submitted shortly after policy activation?"
+        )
+    if "assistant_messages" not in st.session_state:
+        st.session_state["assistant_messages"] = []
+    for message in st.session_state["assistant_messages"]:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+            if message.get("citations"):
+                st.caption("Sources: " + ", ".join(message["citations"]))
+    if question := st.chat_input("Ask about the claims dataset"):
+        st.session_state["assistant_messages"].append({"role": "user", "content": question})
+        result = api_post("/assistant/ask", {"question": question})
+        st.session_state["assistant_messages"].append(
+            {"role": "assistant", "content": result["answer"], "citations": result["citations"]}
+        )
+        st.rerun()
+
+
 def main():
     st.set_page_config(page_title="ClaimSense Nepal", page_icon="🛡️", layout="wide")
     st.sidebar.title("ClaimSense Nepal")
     st.sidebar.caption("Motor claim triage and analytics")
     st.sidebar.info("All records are synthetic and do not represent actual insurance customers.")
-    page = st.sidebar.radio("Workspace", ("Overview", "Claims Explorer", "Risk Analysis", "Trends"))
+    page = st.sidebar.radio("Workspace", ("Overview", "Claims Explorer", "Risk Analysis", "Trends", "AI Assistant"))
     if page == "Overview":
         render_overview()
     elif page == "Claims Explorer":
         render_claims_explorer()
     elif page == "Risk Analysis":
         render_risk_analysis()
-    else:
+    elif page == "Trends":
         render_trends()
+    else:
+        render_assistant()
 
 
 if __name__ == "__main__":

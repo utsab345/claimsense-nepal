@@ -132,3 +132,13 @@ def test_assessment_is_explained_and_never_changes_claim_status(client):
     risk_distribution = client.get("/claims/analytics/risk-distribution").json()
     assert risk_distribution["distribution"]["High"] == 1
     assert risk_distribution["score_histogram"]["80-100"] == 1
+
+
+def test_assistant_api_validates_question_and_answers_database_queries(client):
+    response = client.post("/assistant/ask", json={"question": "What is the average claim amount?"})
+
+    assert response.status_code == 200
+    assert "2500" not in response.json()["answer"]
+    assert response.json()["supported"] is True
+    assert response.json()["citations"]
+    assert client.post("/assistant/ask", json={"question": "?"}).status_code == 422

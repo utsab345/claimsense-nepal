@@ -5,10 +5,11 @@ from sqlalchemy.orm import Session
 
 from app.analytics.risk import RiskEngine
 from app.analytics.service import overview, risk_distribution, trends
+from app.agent.service import answer_question
 from app.database.session import get_db
 from app.models import Claim
-from app.schemas.claim import ClaimCreate, ClaimPage, ClaimRead, ClaimStatus, ReviewPriority
-from app.schemas.claim import RiskAssessment
+from app.schemas.assistant import AssistantAnswer, AssistantQuestion
+from app.schemas.claim import ClaimCreate, ClaimPage, ClaimRead, ClaimStatus, ReviewPriority, RiskAssessment
 from app.services.claims import create_claim, get_claim, get_high_risk_claims, list_claims
 
 
@@ -47,6 +48,11 @@ def claims_trends(session: Session = Depends(get_db)):
 @router.get("/claims/analytics/risk-distribution")
 def claims_risk_distribution(session: Session = Depends(get_db)):
     return risk_distribution(session)
+
+
+@router.post("/assistant/ask", response_model=AssistantAnswer)
+def assistant_ask(payload: AssistantQuestion, session: Session = Depends(get_db)):
+    return answer_question(session, payload.question)
 
 
 @router.get("/claims/high-risk", response_model=list[ClaimRead])
