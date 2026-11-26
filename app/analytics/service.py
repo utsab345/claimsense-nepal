@@ -66,5 +66,26 @@ def risk_distribution(session: Session) -> dict:
     distribution = {"Low": 0, "Medium": 0, "High": 0, "Unassessed": 0}
     for priority, count in rows:
         distribution[priority or "Unassessed"] = count
+    score_rows = session.execute(
+        select(
+            func.sum(case((Claim.risk_score < 20, 1), else_=0)),
+            func.sum(case(((Claim.risk_score >= 20) & (Claim.risk_score < 40), 1), else_=0)),
+            func.sum(case(((Claim.risk_score >= 40) & (Claim.risk_score < 60), 1), else_=0)),
+            func.sum(case(((Claim.risk_score >= 60) & (Claim.risk_score < 80), 1), else_=0)),
+            func.sum(case((Claim.risk_score >= 80, 1), else_=0)),
+            func.count(Claim.risk_score),
+        )
+    ).one()
     anomaly_count = session.scalar(select(func.count()).select_from(Claim).where(Claim.is_anomaly.is_(True))) or 0
-    return {"distribution": distribution, "anomaly_count": anomaly_count}
+    return {
+        "distribution": distribution,
+        "score_histogram": {
+            "0-19": score_rows[0] or 0,
+            "20-39": score_rows[1] or 0,
+            "40-59": score_rows[2] or 0,
+            "60-79": score_rows[3] or 0,
+            "80-100": score_rows[4] or 0,
+        },
+        "assessed_count": score_rows[5],
+        "anomaly_count": anomaly_count,
+    }

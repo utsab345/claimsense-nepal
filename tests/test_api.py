@@ -86,6 +86,10 @@ def test_analytics_return_database_aggregates(client):
     assert overview["average_claim_amount"] == 250_000
     assert overview["risk_distribution"]["Unassessed"] == 2
 
+    risk_distribution = client.get("/claims/analytics/risk-distribution").json()
+    assert risk_distribution["distribution"]["Unassessed"] == 2
+    assert risk_distribution["assessed_count"] == 0
+
     trend_data = client.get("/claims/analytics/trends").json()
     assert trend_data["monthly"][0]["claim_count"] == 2
     assert trend_data["incident_types"][0]["incident_type"] == "Collision"
@@ -125,3 +129,6 @@ def test_assessment_is_explained_and_never_changes_claim_status(client):
     assert claim["claim_status"] == "Open"
     assert claim["risk_indicators"]
     assert client.get("/claims/high-risk").json()[0]["claim_id"] == "CLM-API-1"
+    risk_distribution = client.get("/claims/analytics/risk-distribution").json()
+    assert risk_distribution["distribution"]["High"] == 1
+    assert risk_distribution["score_histogram"]["80-100"] == 1
