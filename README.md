@@ -21,19 +21,8 @@ Claims teams need a consistent way to organize claims, find records that deserve
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    CSV[Synthetic CSV] --> Seed[Database initialization]
-    Seed --> DB[(SQLite)]
-    Analyst[Insurance analyst] --> UI[Streamlit dashboard]
-    UI --> API[FastAPI]
-    API --> DB
-    API --> Rules[Explainable rule scoring]
-    API --> Forest[Standardized Isolation Forest]
-    API --> Tools[Predefined assistant queries]
-    Rules --> DB
-    Forest --> DB
-```
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/8d98b3d1-abf8-46e2-bb17-a0111a485412" />
+
 
 The service layer owns claim reads and writes. The analytics and assistant services use fixed SQLAlchemy expressions against the same SQLite database. The assistant cannot run user-supplied SQL.
 
