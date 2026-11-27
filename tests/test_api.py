@@ -101,9 +101,18 @@ def test_application_seeds_synthetic_dataset(tmp_path):
 
     with TestClient(application) as test_client:
         page = test_client.get("/claims", params={"limit": 1})
+        overview = test_client.get("/claims/analytics/overview").json()
+        explanation = test_client.post(
+            "/assistant/ask", json={"question": "Why was claim CLM-00001 flagged?"}
+        ).json()
 
     assert page.status_code == 200
     assert page.json()["total"] == 2500
+    assert page.json()["items"][0]["risk_score"] is not None
+    assert overview["risk_distribution"]["Unassessed"] == 0
+    assert overview["high_priority_claims"] > 0
+    assert "score of" in explanation["answer"]
+    assert explanation["claim_ids"] == ["CLM-00001"]
     engine.dispose()
 
 
@@ -142,3 +151,22 @@ def test_assistant_api_validates_question_and_answers_database_queries(client):
     assert response.json()["supported"] is True
     assert response.json()["citations"]
     assert client.post("/assistant/ask", json={"question": "?"}).status_code == 422
+    assert client.post("/assistant/ask", json={"question": "   "}).status_code == 422
+
+
+def test_unassessed_risk_is_explicit_and_custom_ids_are_explainable(client):
+    assert client.post("/claims", json=claim_payload()).status_code == 201
+    risk = client.get("/claims/CLM-API-1/risk")
+
+    assert risk.status_code == 200
+    assert risk.json()["assessed"] is False
+    assert risk.json()["risk_indicators"] == []
+
+    assert client.post("/claims/CLM-API-1/assess").status_code == 200
+    answer = client.post(
+        "/assistant/ask", json={"question": "Why was claim CLM-API-1 flagged?"}
+    ).json()
+
+    assert answer["claim_ids"] == ["CLM-API-1"]
+    assert "/100" in answer["answer"]
+    assert client.get("/claims/CLM-API-1/risk").json()["assessed"] is True

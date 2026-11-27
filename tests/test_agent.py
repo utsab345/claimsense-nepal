@@ -99,7 +99,7 @@ def test_assistant_answers_aggregates_with_database_citations(session):
     high_priority = answer_question(session, "How many claims have high review priority?")
     highest_incident = answer_question(session, "Which incident types have the highest claim amounts?")
 
-    assert "Rs 200,000.00" in average.answer
+    assert "NPR 200,000.00" in average.answer
     assert average.citations
     assert "1 claims" in high_priority.answer
     assert "CLM-00001" in high_priority.answer

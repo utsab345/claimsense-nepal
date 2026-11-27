@@ -158,7 +158,7 @@ def test_assistant_exposure_summary_and_top_claims(client):
     assert client.post("/claims/CLM-WF-1/assess").status_code == 200
 
     exposure = client.post("/assistant/ask", json={"question": "What is the financial exposure of high-priority claims?"}).json()
-    assert "Rs" in exposure["answer"]
+    assert "NPR" in exposure["answer"]
     assert exposure["claim_ids"] == ["CLM-WF-1"]
     assert exposure["calculation"]
 

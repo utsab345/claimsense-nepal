@@ -67,6 +67,40 @@ class RiskEngine:
             risk_indicators=indicators,
         )
 
+    def assess_batch(self, claims: Sequence[ClaimLike]) -> list[RiskAssessment]:
+        if not claims:
+            return []
+        anomalies = self._batch_anomalies(claims)
+        results = []
+        for claim, is_anomaly in zip(claims, anomalies):
+            indicators = self._rule_indicators(claim)
+            if is_anomaly:
+                indicators.append(
+                    RiskIndicator(
+                        code="statistical_anomaly",
+                        label="Statistical outlier",
+                        explanation="Isolation Forest identified an unusual combination of claim features relative to the available claim history. This is not evidence of fraud.",
+                        points=self.settings.risk_anomaly_weight,
+                    )
+                )
+            score = min(100, sum(indicator.points for indicator in indicators))
+            if score >= self.settings.risk_high_threshold:
+                priority = "High"
+            elif score >= self.settings.risk_medium_threshold:
+                priority = "Medium"
+            else:
+                priority = "Low"
+            results.append(
+                RiskAssessment(
+                    claim_id=claim.claim_id,
+                    risk_score=score,
+                    review_priority=priority,
+                    is_anomaly=is_anomaly,
+                    risk_indicators=indicators,
+                )
+            )
+        return results
+
     def _rule_indicators(self, claim: ClaimLike) -> list[RiskIndicator]:
         indicators = []
         claim_vehicle_ratio = claim.claim_amount / claim.vehicle_value
@@ -182,6 +216,17 @@ class RiskEngine:
         )
         model.fit(training_values)
         return bool(model.predict(pd.DataFrame([self._features(claim)]))[0] == -1)
+
+    def _batch_anomalies(self, claims: Sequence[ClaimLike]) -> list[bool]:
+        if len(claims) < 50:
+            return [False] * len(claims)
+        training_values = pd.DataFrame([self._features(item) for item in claims])
+        model = make_pipeline(
+            StandardScaler(),
+            IsolationForest(n_estimators=150, contamination="auto", random_state=42),
+        )
+        model.fit(training_values)
+        return [bool(value == -1) for value in model.predict(training_values)]
 
     @staticmethod
     def _features(claim: ClaimLike) -> dict[str, float]:

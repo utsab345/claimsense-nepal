@@ -81,6 +81,7 @@ class ClaimPage(BaseModel):
 
 class RiskAssessment(BaseModel):
     claim_id: str
+    assessed: bool = True
     risk_score: float = Field(ge=0, le=100)
     review_priority: ReviewPriority
     is_anomaly: bool

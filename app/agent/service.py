@@ -9,7 +9,7 @@ from app.models import Claim
 from app.schemas.assistant import AssistantAnswer
 
 
-CLAIM_ID_PATTERN = re.compile(r"\bCLM-\d+\b", re.IGNORECASE)
+CLAIM_ID_PATTERN = re.compile(r"\b[A-Z][A-Z0-9]*(?:-[A-Za-z0-9]+)+\b", re.IGNORECASE)
 _HIGH_RISK_TERMS = (
     "high priority",
     "high review priority",
@@ -65,7 +65,7 @@ def _average_claim_amount(session: Session) -> AssistantAnswer:
     if not count:
         return AssistantAnswer(answer="There are no claims in the database yet.", citations=["Claims database"])
     return AssistantAnswer(
-        answer=f"The average claim amount is Rs {float(average):,.2f} across {count:,} claims.",
+        answer=f"The average claim amount is NPR {float(average):,.2f} across {count:,} claims.",
         citations=[f"Database aggregate: {count} claims"],
         calculation="AVG(claim_amount) over all claims in the database",
     )
@@ -100,7 +100,7 @@ def _top_high_priority_claims(session: Session) -> AssistantAnswer:
             citations=["Claims database"],
         )
     details = "; ".join(
-        f"{row['claim_id']} (score {float(row['risk_score']):.0f}, Rs {row['claim_amount']:,.2f}, {row['incident_type']})"
+        f"{row['claim_id']} (score {float(row['risk_score']):.0f}, NPR {row['claim_amount']:,.2f}, {row['incident_type']})"
         for row in rows
     )
     return AssistantAnswer(
@@ -118,8 +118,8 @@ def _financial_exposure(session: Session) -> AssistantAnswer:
     share = (high / total * 100) if total else 0.0
     ids = [row["claim_id"] for row in top_high_priority_claims(session, limit=5)]
     answer = (
-        f"High-priority claims account for Rs {high:,.2f} across {result['claims_count']:,} claims, "
-        f"{share:.1f}% of the Rs {total:,.2f} total claimed amount in the database. "
+        f"High-priority claims account for NPR {high:,.2f} across {result['high_priority_count']:,} claims, "
+        f"{share:.1f}% of the NPR {total:,.2f} total claimed amount in the database. "
         "This is a claim-amount total, not an expected loss or a fraud finding."
     )
     if ids:
@@ -137,10 +137,10 @@ def _portfolio_summary(session: Session) -> AssistantAnswer:
     if not result["claims"]:
         return AssistantAnswer(answer="There are no claims in the database yet.", citations=["Claims database"])
     answer = (
-        f"The portfolio holds {result['claims']:,} synthetic claims totalling Rs {result['total_amount']:,.2f}. "
+        f"The portfolio holds {result['claims']:,} synthetic claims totalling NPR {result['total_amount']:,.2f}. "
         f"{result['open_claims']:,} are open and {result['under_review']:,} are under review. "
         f"{result['anomalies']:,} claims have a recorded statistical anomaly flag and "
-        f"Rs {result['high_priority_amount']:,.2f} sits in high-priority claims. "
+        f"NPR {result['high_priority_amount']:,.2f} sits in high-priority claims. "
         "These figures describe generated data only, not the Nepal insurance market."
     )
     return AssistantAnswer(
@@ -164,7 +164,7 @@ def _incident_amounts(session: Session, total: bool) -> AssistantAnswer:
     ordered = sorted(rows, key=lambda row: float(row[3] if total else row[2]), reverse=True)
     measure = "total" if total else "average"
     records = [
-        f"{row[0]}: Rs {float(row[3] if total else row[2]):,.2f} {measure} across {row[1]} claims"
+        f"{row[0]}: NPR {float(row[3] if total else row[2]):,.2f} {measure} across {row[1]} claims"
         for row in ordered[:3]
     ]
     return AssistantAnswer(
@@ -249,7 +249,7 @@ def _early_claim_patterns(session: Session) -> AssistantAnswer:
         )
     answer = (
         f"{early_count} of {total_count} claims occurred within {window} days of policy start. "
-        f"Their average amount was Rs {float(early_average):,.2f}, compared with Rs {float(total_average):,.2f} "
+        f"Their average amount was NPR {float(early_average):,.2f}, compared with NPR {float(total_average):,.2f} "
         "for all claims. This is a descriptive comparison, not evidence of wrongdoing."
     )
     if examples:

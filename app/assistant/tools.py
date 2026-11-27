@@ -21,12 +21,14 @@ def financial_exposure(session: Session) -> dict:
             func.coalesce(func.sum(_HIGH_AMOUNT), 0.0),
             func.count(Claim.id),
             func.coalesce(func.sum(Claim.claim_amount), 0.0),
+            func.sum(case((Claim.review_priority == "High", 1), else_=0)),
         )
     ).one()
     return {
         "high_priority_amount": float(row[0] or 0.0),
         "claims_count": row[1],
         "total_amount": float(row[2] or 0.0),
+        "high_priority_count": row[3] or 0,
     }
 
 

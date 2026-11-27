@@ -19,10 +19,12 @@ def claim_risk(claim_id: str, session: Session = Depends(get_db)):
     claim = get_claim(session, claim_id)
     if claim is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Claim not found")
+    assessed = claim.risk_score is not None
     return RiskAssessment(
         claim_id=claim.claim_id,
-        risk_score=claim.risk_score or 0.0,
-        review_priority=claim.review_priority or "Low",
+        assessed=assessed,
+        risk_score=claim.risk_score if assessed else 0.0,
+        review_priority=claim.review_priority if assessed else "Low",
         is_anomaly=bool(claim.is_anomaly),
         risk_indicators=claim.risk_indicators or [],
         disclaimer=DISCLAIMER,
