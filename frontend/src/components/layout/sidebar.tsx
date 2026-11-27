@@ -38,12 +38,12 @@ export function Sidebar({ mobile = false, onNavigate }: { mobile?: boolean; onNa
       )}
     >
       <div className={cn("flex h-14 items-center gap-2 border-b border-border px-4", collapsed && "justify-center px-0")}>
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-primary text-primary-foreground">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-glow">
           <ShieldCheck className="h-4 w-4" />
         </div>
         {!collapsed ? (
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold tracking-tight">ClaimSense</div>
+            <div className="truncate text-base font-semibold tracking-tight">ClaimSense</div>
             <div className="text-2xs text-muted-foreground">Nepal · Intelligence</div>
           </div>
         ) : null}
@@ -59,9 +59,9 @@ export function Sidebar({ mobile = false, onNavigate }: { mobile?: boolean; onNa
               onClick={onNavigate}
               className={({ isActive }) =>
                 cn(
-                  "flex h-9 items-center gap-2.5 rounded px-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+                  "flex h-10 items-center gap-2.5 rounded-md px-3 text-[0.95rem] text-muted-foreground transition-all hover:bg-muted hover:text-foreground",
                   collapsed && "justify-center px-0",
-                  isActive && "bg-primary/10 font-medium text-primary hover:bg-primary/10 hover:text-primary",
+                  isActive && "bg-primary/12 font-semibold text-primary shadow-sm ring-1 ring-primary/15 hover:bg-primary/12 hover:text-primary",
                 )
               }
             >

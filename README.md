@@ -7,7 +7,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
-![Tests](https://img.shields.io/badge/Tests-38%20passed-16A34A?logo=pytest&logoColor=white)
+![Tests](https://img.shields.io/badge/Tests-39%20passed-16A34A?logo=pytest&logoColor=white)
 
 ClaimSense Nepal is an explainable motor insurance claim triage and analytics MVP. It pairs a React analyst workspace with a FastAPI/SQLite backend for claim management, review priorities, trend summaries, investigation notes, and a database-grounded question assistant.
 
@@ -26,6 +26,7 @@ Claims teams need a consistent way to organize claims, find records that deserve
 - Use a standardized Isolation Forest model when at least 50 historical claims are available.
 - Review aggregated claim amounts, claim trends, incident patterns, risk scores, and the high-priority queue.
 - Ask a limited set of natural-language questions answered by predefined, read-only database queries.
+- See the active tool, live prompts, and contextual follow-up questions in the Copilot workspace.
 - Investigate a claim with notes and a timestamped activity trail.
 - Switch between light and dark themes with compact or comfortable density.
 - Run the React workspace and FastAPI service locally or with Docker Compose.
@@ -118,7 +119,7 @@ The defaults are transparent heuristics for demonstrating the workflow. They hav
 
 ## Assistant architecture
 
-`POST /assistant/ask` recognizes supported question types and runs predefined SQLAlchemy queries for counts, averages, incident comparisons, early-policy claims, stored anomaly results, and stored claim explanations. Answers include a database citation or claim ID. Unsupported questions receive an explicit response. It does not execute generated SQL, alter records, or send claim information to a third-party model. No LLM key or network access is required.
+`POST /assistant/ask` recognizes supported question types and runs predefined SQLAlchemy queries for counts, averages, incident comparisons, early-policy claims, stored anomaly results, and stored claim explanations. Answers include a database citation or claim ID, the read-only tool that produced the answer, and supported follow-up questions. Unsupported questions receive an explicit response. It does not execute generated SQL, alter records, or send claim information to a third-party model. No LLM key or network access is required.
 
 The assistant has intentionally limited language coverage. It can only answer from the supported query set and stored assessments. Claims that have not been assessed are not described as detected anomalies.
 

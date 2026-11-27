@@ -32,6 +32,8 @@ describe("assistant context", () => {
       supported: true,
       claim_ids: [],
       calculation: "AVG(claim_amount)",
+      tool: "average_claim_amount",
+      follow_ups: ["Summarize the claims portfolio."],
     })
   })
 

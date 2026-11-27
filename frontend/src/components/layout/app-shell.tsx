@@ -46,8 +46,8 @@ export function AppShell() {
             lastRefresh={lastRefresh}
             onOpenNotifications={() => setNotificationsOpen(true)}
           />
-          <main className="flex-1 overflow-y-auto">
-            <div className="mx-auto w-full max-w-[1600px] space-y-5 px-4 py-5 sm:px-6">
+          <main className="app-canvas flex-1 overflow-y-auto">
+            <div className="mx-auto w-full max-w-[1600px] space-y-6 px-4 py-6 sm:px-6">
               <Outlet />
             </div>
           </main>

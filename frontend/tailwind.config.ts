@@ -35,12 +35,14 @@ export default {
       },
       boxShadow: {
         subtle: "0 1px 2px hsl(var(--foreground) / 0.05)",
+        card: "0 12px 30px -18px hsl(var(--foreground) / 0.28)",
+        glow: "0 8px 24px -10px hsl(var(--primary) / 0.45)",
       },
       fontFamily: {
         sans: ["Inter", "Segoe UI", "Helvetica Neue", "Arial", "sans-serif"],
       },
       fontSize: {
-        "2xs": ["0.6875rem", { lineHeight: "1rem" }],
+        "2xs": ["0.75rem", { lineHeight: "1.05rem" }],
       },
     },
   },

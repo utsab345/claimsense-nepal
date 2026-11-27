@@ -184,6 +184,8 @@ export interface AssistantAnswer {
   supported: boolean
   claim_ids: string[]
   calculation: string | null
+  tool: string
+  follow_ups: string[]
 }
 
 export interface ApiErrorBody {

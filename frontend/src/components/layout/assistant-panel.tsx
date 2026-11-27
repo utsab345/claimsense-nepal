@@ -1,31 +1,33 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { Link } from "react-router-dom"
-import { Bot, CornerDownLeft, Eraser, MessageSquare } from "lucide-react"
+import { useEffect, useRef, useState, type FormEvent } from "react"
+import { Bot, CornerDownLeft, Eraser, Sparkles } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
+import { AssistantMessage } from "@/components/common/assistant-message"
+import { ThinkingIndicator } from "@/components/common/thinking-indicator"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/feedback"
 import { useAssistant } from "@/context/assistant-context"
-import { api } from "@/lib/api"
-import { cn } from "@/lib/utils"
+import { useCopilotSuggestions } from "@/hooks/use-copilot-suggestions"
 
-const BASE_SUGGESTIONS = [
-  "What are the five highest-priority claims?",
-  "What is the financial exposure of high-priority claims?",
-  "Which incident categories have the highest average claim amounts?",
-  "Summarize the claims portfolio.",
+const PLACEHOLDERS = [
+  "Ask why a claim was flagged…",
+  "Ask about high-priority exposure…",
+  "Ask for a portfolio summary…",
 ]
 
 export function AssistantPanel() {
   const { open, setOpen, messages, pending, send, clear } = useAssistant()
   const [question, setQuestion] = useState("")
+  const [placeholderIndex, setPlaceholderIndex] = useState(0)
   const bottom = useRef<HTMLDivElement>(null)
-  const priorityQuery = useQuery({ queryKey: ["high-risk-claims"], queryFn: api.highRisk })
-  const suggestions = useMemo(() => {
-    const claimId = priorityQuery.data?.[0]?.claim_id
-    return claimId ? [`Why was claim ${claimId} flagged?`, ...BASE_SUGGESTIONS] : BASE_SUGGESTIONS
-  }, [priorityQuery.data])
+  const suggestions = useCopilotSuggestions()
+
+  useEffect(() => {
+    const timer = window.setInterval(
+      () => setPlaceholderIndex((current) => (current + 1) % PLACEHOLDERS.length),
+      3500,
+    )
+    return () => window.clearInterval(timer)
+  }, [])
 
   useEffect(() => {
     if (open) bottom.current?.scrollIntoView({ block: "end" })
@@ -43,11 +45,11 @@ export function AssistantPanel() {
       <DialogContent className="left-auto right-0 top-0 flex h-full max-w-md translate-x-0 translate-y-0 flex-col rounded-none border-y-0 border-r-0 p-0">
         <div className="flex items-center justify-between border-b border-border px-4 py-4">
           <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded bg-primary/10 text-primary">
-              <Bot className="h-4 w-4" />
+            <span className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary shadow-sm">
+              <Bot className="h-5 w-5" />
             </span>
             <div>
-              <DialogTitle className="text-sm font-semibold">Insurance Copilot</DialogTitle>
+              <DialogTitle className="text-base font-semibold">Insurance Copilot</DialogTitle>
               <DialogDescription className="mt-0.5 text-2xs text-muted-foreground">
                 Read-only answers from the claims database
               </DialogDescription>
@@ -60,52 +62,23 @@ export function AssistantPanel() {
 
         <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4" role="log" aria-live="polite">
           {messages.map((message) => (
-            <div key={message.id} className={cn("flex", message.role === "user" ? "justify-end" : "justify-start")}>
-              <div
-                className={cn(
-                  "max-w-[92%] rounded border px-3 py-2 text-xs leading-relaxed",
-                  message.role === "user"
-                    ? "border-primary/20 bg-primary/10 text-foreground"
-                    : "border-border bg-muted/40 text-foreground",
-                )}
-              >
-                <div className="mb-1 flex items-center gap-1.5 text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {message.role === "assistant" ? <MessageSquare className="h-3 w-3" /> : null}
-                  {message.role === "assistant" ? "Copilot" : "You"}
-                  {message.answer !== undefined && !message.answer.supported ? (
-                    <Badge variant="warning">Not supported</Badge>
-                  ) : null}
-                </div>
-                <p className="whitespace-pre-wrap">{message.text}</p>
-                {message.error ? <p className="mt-1 text-2xs text-destructive">{message.error}</p> : null}
-                {message.answer?.claim_ids?.length ? (
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {message.answer.claim_ids.slice(0, 5).map((id) => (
-                      <Link key={id} to={`/claims/${id}`} onClick={() => setOpen(false)}>
-                        <Badge variant="info" className="hover:text-primary">{id}</Badge>
-                      </Link>
-                    ))}
-                  </div>
-                ) : null}
-                {message.answer?.calculation ? (
-                  <p className="mt-2 border-t border-border pt-2 font-mono text-2xs text-muted-foreground">
-                    {message.answer.calculation}
-                  </p>
-                ) : null}
-                {message.answer?.citations?.length ? (
-                  <p className="mt-1 text-2xs text-muted-foreground/80">
-                    Source: {message.answer.citations.join(" · ")}
-                  </p>
-                ) : null}
-              </div>
-            </div>
+            <AssistantMessage
+              key={message.id}
+              message={message}
+              onAsk={send}
+              onOpenClaim={() => setOpen(false)}
+              compact
+            />
           ))}
-          {pending ? <p className="text-xs text-muted-foreground">Querying the claims database…</p> : null}
+          {pending ? <ThinkingIndicator compact /> : null}
           <div ref={bottom} />
         </div>
 
         <div className="border-t border-border p-3">
-          <div className="mb-2 flex gap-1 overflow-x-auto pb-1">
+          <div className="mb-1.5 flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <Sparkles className="h-3.5 w-3.5 text-primary" /> Try
+          </div>
+          <div className="mb-2 flex gap-1.5 overflow-x-auto pb-1">
             {suggestions.map((suggestion) => (
               <Button
                 key={suggestion}
@@ -124,8 +97,8 @@ export function AssistantPanel() {
               aria-label="Ask a question"
               value={question}
               onChange={(event) => setQuestion(event.target.value)}
-              placeholder="Ask about claims, exposure or risk…"
-              className="h-9 flex-1 rounded border border-input bg-card px-2.5 text-sm placeholder:text-muted-foreground/70 focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
+              placeholder={PLACEHOLDERS[placeholderIndex]}
+              className="h-10 flex-1 rounded-md border border-input bg-card px-3 text-sm placeholder:text-muted-foreground/70 focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
             />
             <Button type="submit" size="icon" aria-label="Send question" disabled={pending || question.trim().length < 3 || question.trim().length > 500}>
               <CornerDownLeft className="h-4 w-4" />

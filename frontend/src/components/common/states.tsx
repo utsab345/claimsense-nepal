@@ -11,8 +11,8 @@ export function EmptyState({ title, description, action }: { title: string; desc
       <div className="mb-3 flex h-9 w-9 items-center justify-center rounded border border-border bg-muted text-muted-foreground">
         <Inbox className="h-4 w-4" />
       </div>
-      <p className="text-sm font-medium text-foreground">{title}</p>
-      <p className="mt-1 max-w-sm text-xs text-muted-foreground">{description}</p>
+      <p className="text-base font-medium text-foreground">{title}</p>
+      <p className="mt-1 max-w-sm text-sm text-muted-foreground">{description}</p>
       {action ? <div className="mt-4">{action}</div> : null}
     </div>
   )
@@ -24,8 +24,8 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
       <div className="mb-3 flex h-9 w-9 items-center justify-center rounded border border-destructive/30 bg-destructive/10 text-destructive">
         <AlertCircle className="h-4 w-4" />
       </div>
-      <p className="text-sm font-medium text-foreground">Unable to load this view</p>
-      <p className="mt-1 max-w-sm text-xs text-muted-foreground">{message}</p>
+      <p className="text-base font-medium text-foreground">Unable to load this view</p>
+      <p className="mt-1 max-w-sm text-sm text-muted-foreground">{message}</p>
       {onRetry ? (
         <Button variant="outline" size="sm" className="mt-4" onClick={onRetry}>
           Try again

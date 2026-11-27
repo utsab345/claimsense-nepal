@@ -46,6 +46,10 @@
     --cell-y: 0.35rem;
   }
 
+  html {
+    font-size: 17px;
+  }
+
   * {
     @apply border-border;
   }
@@ -71,6 +75,24 @@
 }
 
 @layer utilities {
+  .app-canvas {
+    background-color: hsl(var(--background));
+    background-image: radial-gradient(900px 420px at 85% -8%, hsl(var(--primary) / 0.16), transparent 65%);
+  }
+
+  .dark .app-canvas {
+    background-image: radial-gradient(900px 420px at 85% -8%, hsl(var(--primary) / 0.22), transparent 65%);
+  }
+
+  .card-accent::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.42), transparent);
+  }
+
   .section-grid {
     @apply grid gap-4 sm:grid-cols-2 xl:grid-cols-4;
   }
@@ -86,11 +108,11 @@
 }
 
 .recharts-cartesian-axis-tick-value {
-  font-size: 11px;
+  font-size: 12px;
   fill: hsl(var(--muted-foreground));
 }
 
 .recharts-legend-item-text {
-  font-size: 12px;
+  font-size: 13px;
   color: hsl(var(--muted-foreground));
 }

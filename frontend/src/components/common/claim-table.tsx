@@ -69,7 +69,7 @@ export function ClaimTable({ claims, sortBy, sortDir, onSort, emptyTitle, emptyD
               <Link className="font-medium text-foreground hover:text-primary hover:underline" to={`/claims/${claim.claim_id}`}>
                 {claim.claim_id}
               </Link>
-              <div className="text-2xs text-muted-foreground">{claim.policy_id}</div>
+              <div className="text-xs text-muted-foreground">{claim.policy_id}</div>
             </TableCell>
             <TableCell>{claim.incident_type}</TableCell>
             <TableCell className="text-muted-foreground">{claim.incident_location ?? "Unknown"}</TableCell>

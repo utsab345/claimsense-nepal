@@ -21,3 +21,5 @@ class AssistantAnswer(BaseModel):
     supported: bool = True
     claim_ids: list[str] = Field(default_factory=list)
     calculation: str | None = None
+    tool: str = "unsupported"
+    follow_ups: list[str] = Field(default_factory=list)

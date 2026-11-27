@@ -38,19 +38,19 @@ export function Topbar({
   }
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-card px-3 sm:px-4">
+    <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-card/90 px-3 backdrop-blur supports-[backdrop-filter]:bg-card/80 sm:px-4">
       <Button variant="ghost" size="icon" className="lg:hidden" onClick={onOpenMobile} aria-label="Open menu">
         <Menu className="h-4 w-4" />
       </Button>
 
       <form onSubmit={submitSearch} className="relative hidden max-w-xs flex-1 md:block">
-        <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
         <input
           aria-label="Find a claim"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Find a claim ID or policy ID"
-          className="h-9 w-full rounded border border-input bg-background pl-8 pr-3 text-sm placeholder:text-muted-foreground/70 focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
+          className="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm placeholder:text-muted-foreground/70 focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
         />
       </form>
 
@@ -91,7 +91,7 @@ export function Topbar({
         <Button variant="ghost" size="icon" className="relative" onClick={onOpenNotifications} aria-label="Notifications">
           <Bell className="h-4 w-4" />
           {unread ? (
-            <span className="num absolute right-1 top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary px-0.5 text-[9px] font-semibold text-primary-foreground">
+            <span className="num absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-0.5 text-[10px] font-semibold text-primary-foreground shadow-glow">
               {unread}
             </span>
           ) : null}

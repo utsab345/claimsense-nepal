@@ -4,12 +4,14 @@ from sqlalchemy.orm import Session
 from app.models import Claim
 
 READ_ONLY_TOOLS = (
+    "average_claim_amount",
     "claim_explanation",
-    "high_priority_claims",
-    "financial_exposure",
-    "incident_amounts",
     "early_claim_patterns",
+    "financial_exposure",
+    "high_priority_claims",
+    "incident_amounts",
     "portfolio_summary",
+    "unusual_missing_documents",
 )
 
 _HIGH_AMOUNT = case((Claim.review_priority == "High", Claim.claim_amount), else_=0.0)

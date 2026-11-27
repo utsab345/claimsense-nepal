@@ -101,6 +101,8 @@ def test_assistant_answers_aggregates_with_database_citations(session):
 
     assert "NPR 200,000.00" in average.answer
     assert average.citations
+    assert average.tool == "average_claim_amount"
+    assert average.follow_ups
     assert "1 claims" in high_priority.answer
     assert "CLM-00001" in high_priority.answer
     assert "Collision" in highest_incident.answer
@@ -114,6 +116,7 @@ def test_assistant_explains_claim_and_lists_assessed_outliers(session):
     assert "85/100" in explanation.answer
     assert "Supporting documents missing" in explanation.answer
     assert "CLM-00001" in explanation.citations[0]
+    assert explanation.tool == "claim_explanation"
     assert "CLM-00001" in missing_documents.answer
     assert "CLM-00003" not in missing_documents.answer
 
@@ -125,6 +128,7 @@ def test_assistant_describes_policy_start_patterns_and_unsupported_queries(sessi
     assert "2 of 3 claims" in early.answer
     assert "not evidence of wrongdoing" in early.answer
     assert unsupported.supported is False
+    assert unsupported.tool == "unsupported"
     assert "approved database queries" not in unsupported.answer
 
 

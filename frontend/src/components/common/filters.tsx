@@ -34,7 +34,7 @@ export function FilterBar({
   return (
     <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-2 lg:grid-cols-5">
       <div className="relative sm:col-span-2 lg:col-span-2">
-        <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
         <Input
           aria-label="Search claims"
           placeholder="Search claim, policy or customer ID"
