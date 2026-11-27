@@ -7,6 +7,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     database_url: str = "sqlite:///./claimsense.db"
     dataset_path: str = "data/generated/claims.csv"
+    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    api_version: str = "2.0.0"
     risk_anomaly_weight: int = Field(default=20, ge=0, le=50)
     risk_high_threshold: int = Field(default=70, ge=1, le=100)
     risk_medium_threshold: int = Field(default=40, ge=0, le=99)
@@ -27,6 +29,10 @@ class Settings(BaseSettings):
     risk_points_overnight_incident: int = Field(default=5, ge=0, le=100)
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+    @property
+    def origin_list(self) -> list[str]:
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
     @model_validator(mode="after")
     def validate_risk_thresholds(self):

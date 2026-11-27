@@ -1,11 +1,12 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.engine import Engine
 
 from app.api.routes import router
 from app.core.config import get_settings
-from app.database.base import Base
+from app.core.errors import register_error_handlers
 from app.database.initialize import initialize_database
 from app.database.session import SessionLocal, create_session_factory, engine
 
@@ -22,10 +23,23 @@ def create_app(database_engine: Engine | None = None, seed_data: bool = True) ->
 
     application = FastAPI(
         title="ClaimSense Nepal API",
-        description="Explainable motor insurance claim triage and analytics for synthetic data.",
-        version="1.0.0",
+        description=(
+            "Explainable motor insurance claim triage, investigation workflow and database-grounded "
+            "assistant for reproducible synthetic data. Risk scores are decision support only."
+        ),
+        version=settings.api_version,
         lifespan=lifespan,
+        docs_url="/docs",
+        redoc_url="/redoc",
     )
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.origin_list,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type"],
+    )
+    register_error_handlers(application)
     application.include_router(router)
     if session_factory is not SessionLocal:
 
