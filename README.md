@@ -1,6 +1,15 @@
 # ClaimSense Nepal
 
-ClaimSense Nepal is an explainable motor insurance claim triage and analytics MVP. It provides claim management, analyst-oriented review priorities, trend summaries, and a database-grounded question assistant.
+[![CI](https://github.com/utsab345/claimsense-nepal/actions/workflows/ci.yml/badge.svg)](https://github.com/utsab345/claimsense-nepal/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009485?logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![Tests](https://img.shields.io/badge/Tests-38%20passed-16A34A?logo=pytest&logoColor=white)
+
+ClaimSense Nepal is an explainable motor insurance claim triage and analytics MVP. It pairs a React analyst workspace with a FastAPI/SQLite backend for claim management, review priorities, trend summaries, investigation notes, and a database-grounded question assistant.
 
 All records are synthetic, generated for this project, and do not represent actual insurance customers or Nepal insurance industry statistics.
 
@@ -17,23 +26,25 @@ Claims teams need a consistent way to organize claims, find records that deserve
 - Use a standardized Isolation Forest model when at least 50 historical claims are available.
 - Review aggregated claim amounts, claim trends, incident patterns, risk scores, and the high-priority queue.
 - Ask a limited set of natural-language questions answered by predefined, read-only database queries.
-- Run the API and Streamlit dashboard locally or with Docker Compose.
+- Investigate a claim with notes and a timestamped activity trail.
+- Switch between light and dark themes with compact or comfortable density.
+- Run the React workspace and FastAPI service locally or with Docker Compose.
 
 ## Architecture
 
-<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/8d98b3d1-abf8-46e2-bb17-a0111a485412" />
+<img width="1536" height="1024" alt="ClaimSense Nepal architecture" src="https://github.com/user-attachments/assets/8d98b3d1-abf8-46e2-bb17-a0111a485412" />
 
-
-The service layer owns claim reads and writes. The analytics and assistant services use fixed SQLAlchemy expressions against the same SQLite database. The assistant cannot run user-supplied SQL.
+The React workspace calls the FastAPI service, which owns claim reads and writes. The analytics, risk scoring, and assistant services use fixed SQLAlchemy expressions against the same SQLite database. The assistant cannot run user-supplied SQL.
 
 ## Technology stack
 
 - Python 3.12
 - FastAPI, Pydantic, SQLAlchemy, SQLite
 - Pandas, Scikit-learn, Faker
-- Streamlit, Plotly
-- Pytest and FastAPI TestClient
+- React, TypeScript, Vite, Tailwind CSS, Radix primitives, TanStack Query, Recharts, Lucide
+- Pytest, FastAPI TestClient, Vitest, Testing Library
 - Docker and Docker Compose
+- GitHub Actions CI
 
 ## Dataset generation
 
@@ -110,28 +121,41 @@ The defaults are transparent heuristics for demonstrating the workflow. They hav
 
 The assistant has intentionally limited language coverage. It can only answer from the supported query set and stored assessments. Claims that have not been assessed are not described as detected anomalies.
 
+## Demo flow
+
+1. Open `http://localhost:5173` and confirm the dashboard loads with portfolio totals, trends, and the high-priority queue.
+2. Toggle the theme in the top bar; reload to confirm the choice persists without a light-theme flash.
+3. Open the high-priority queue and select a claim with a non-zero score. Check that each point in the score is backed by a named indicator.
+4. Add an investigation note and confirm it appears in the claim timeline and the Investigations page.
+5. Ask the assistant why that claim was flagged and follow the claim link in the answer back to the record.
+6. Ask for a portfolio aggregate and check that the answer cites the read-only database query used.
+
 ## API endpoints
 
 Swagger UI is available at `http://localhost:8000/docs`; ReDoc is at `http://localhost:8000/redoc`.
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| `GET` | `/health` | Health check |
+| `GET` | `/health`, `/health/detailed`, `/settings` | Service status and active configuration |
 | `GET` | `/claims` | Filter and paginate claims |
 | `GET` | `/claims/{claim_id}` | Retrieve a claim |
 | `POST` | `/claims` | Validate and create a claim |
-| `GET` | `/claims/analytics/overview` | Portfolio totals and review distribution |
-| `GET` | `/claims/analytics/trends` | Monthly, incident, and status aggregates |
-| `GET` | `/claims/analytics/risk-distribution` | Priority counts, score histogram, and anomaly count |
-| `GET` | `/claims/high-risk` | High-priority review queue |
+| `GET` | `/claims/export` | Export filtered claims as CSV |
+| `GET` | `/claims/{claim_id}/risk` | Retrieve a stored assessment without re-scoring |
 | `POST` | `/claims/{claim_id}/assess` | Assess and store a claim score and explanations |
+| `GET` | `/claims/analytics/overview`, `trends`, `risk-distribution`, `portfolio` | Portfolio and risk aggregates |
+| `GET` | `/claims/high-risk` | High-priority review queue |
+| `GET` | `/investigations`, `/claims/{claim_id}/investigation` | Investigation queue and claim history |
+| `POST` | `/claims/{claim_id}/investigation/note` | Add an investigation note |
+| `PATCH` | `/claims/{claim_id}/investigation/status`, `assignment` | Update investigation state |
+| `GET` | `/activity`, `/notifications` | Audit trail and analyst notifications |
 | `POST` | `/assistant/ask` | Ask a supported database-grounded question |
 
 `GET /claims` accepts `limit` (1 to 100), `offset`, `status`, `incident_type`, `risk_level`, and `search` query parameters.
 
 ## Local setup
 
-Python 3.12 is recommended.
+Python 3.12 and Node.js 20 are recommended.
 
 ```bash
 git clone https://github.com/utsab345/claimsense-nepal.git
@@ -141,6 +165,7 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 cp .env.example .env
 python scripts/generate_data.py
+cd frontend && npm ci
 ```
 
 The API creates `claimsense.db` and seeds it from the CSV on first startup if the database is empty. Existing database records are not overwritten.
@@ -151,35 +176,37 @@ The API creates `claimsense.db` and seeds it from the CSV on first startup if th
 uvicorn app.main:app --reload
 ```
 
-### Run the dashboard
+### Run the React workspace
 
-In another terminal with the environment activated:
+In another terminal:
 
 ```bash
-streamlit run dashboard/app.py
+cd frontend
+npm run dev
 ```
 
-Open `http://localhost:8501`. Set `API_BASE_URL` if the API is hosted at a different address.
+Open `http://localhost:5173`. Vite proxies `/api` to the FastAPI service on port 8000. The original Streamlit dashboard remains in `dashboard/` but is no longer the primary interface.
 
 ### Run tests
 
 ```bash
 python -m pytest -q
+cd frontend && npm run test && npm run build
 ```
 
 ## Environment configuration
 
-Copy `.env.example` to `.env`. `DATABASE_URL` and `DATASET_PATH` choose the SQLite URL and seed CSV. The remaining `RISK_*` settings control score thresholds, rule cutoffs, points, and priority boundaries. `API_BASE_URL` controls the dashboard API address.
+Copy `.env.example` to `.env`. `DATABASE_URL` and `DATASET_PATH` choose the SQLite URL and seed CSV. The `RISK_*` settings control score thresholds, rule cutoffs, points, and priority boundaries. `CORS_ORIGINS` lists allowed browser origins. The React client always calls the same-origin `/api` path; `API_BASE_URL` is retained only for the legacy Streamlit view.
 
 ## Docker
 
-Docker Compose starts the API and dashboard and persists SQLite in a named volume:
+Docker Compose starts the React workspace behind nginx, the FastAPI service, and a persistent SQLite volume:
 
 ```bash
 docker compose up --build
 ```
 
-Open `http://localhost:8501` for the dashboard and `http://localhost:8000/docs` for the API. Stop services with `docker compose down`. The named database volume is retained unless explicitly removed.
+Open `http://localhost:5173` for the workspace and `http://localhost:8000/docs` for the API. nginx proxies `/api` to the backend, so the UI needs no runtime API URL. Stop services with `docker compose down`. The named database volume is retained unless explicitly removed.
 
 ## Limitations
 
@@ -188,7 +215,7 @@ Open `http://localhost:8501` for the dashboard and `http://localhost:8000/docs` 
 - Isolation Forest output depends on the available synthetic claim history and should only prioritize human review.
 - The assistant supports a limited intent set and cannot answer arbitrary natural-language questions.
 - SQLite is suitable for a local assessment MVP, not a multi-user production workload.
-- The project does not include authentication, role permissions, audit trails, claim document storage, or a claims decision workflow.
+- The project does not include authentication, role permissions, claim document storage, or a controlled claims decision workflow.
 
 ## Future improvements
 
