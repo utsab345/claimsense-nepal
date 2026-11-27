@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type FormEvent } from "react"
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router-dom"
 import { Bot, CornerDownLeft, Eraser, MessageSquare } from "lucide-react"
 
@@ -6,10 +7,10 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/feedback"
 import { useAssistant } from "@/context/assistant-context"
+import { api } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
-const SUGGESTIONS = [
-  "Why was claim CLM-00001 flagged?",
+const BASE_SUGGESTIONS = [
   "What are the five highest-priority claims?",
   "What is the financial exposure of high-priority claims?",
   "Which incident categories have the highest average claim amounts?",
@@ -20,6 +21,11 @@ export function AssistantPanel() {
   const { open, setOpen, messages, pending, send, clear } = useAssistant()
   const [question, setQuestion] = useState("")
   const bottom = useRef<HTMLDivElement>(null)
+  const priorityQuery = useQuery({ queryKey: ["high-risk-claims"], queryFn: api.highRisk })
+  const suggestions = useMemo(() => {
+    const claimId = priorityQuery.data?.[0]?.claim_id
+    return claimId ? [`Why was claim ${claimId} flagged?`, ...BASE_SUGGESTIONS] : BASE_SUGGESTIONS
+  }, [priorityQuery.data])
 
   useEffect(() => {
     if (open) bottom.current?.scrollIntoView({ block: "end" })
@@ -100,7 +106,7 @@ export function AssistantPanel() {
 
         <div className="border-t border-border p-3">
           <div className="mb-2 flex gap-1 overflow-x-auto pb-1">
-            {SUGGESTIONS.map((suggestion) => (
+            {suggestions.map((suggestion) => (
               <Button
                 key={suggestion}
                 variant="outline"

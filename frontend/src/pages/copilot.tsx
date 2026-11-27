@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type FormEvent } from "react"
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router-dom"
 import { Bot, CornerDownLeft, Eraser, MessageSquare, PanelRightOpen } from "lucide-react"
 
@@ -8,10 +9,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/controls"
 import { useAssistant, type ChatMessage } from "@/context/assistant-context"
+import { api } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
-const SUGGESTIONS = [
-  "Explain why claim CLM-00001 was flagged",
+const BASE_SUGGESTIONS = [
   "What are the five highest-priority claims?",
   "What is the financial exposure of high-priority claims?",
   "Which incident categories have the highest average claim amounts?",
@@ -88,6 +89,13 @@ export function CopilotPage() {
   const { messages, pending, send, clear, setOpen } = useAssistant()
   const [question, setQuestion] = useState("")
   const logRef = useRef<HTMLDivElement>(null)
+  const priorityQuery = useQuery({ queryKey: ["high-risk-claims"], queryFn: api.highRisk })
+  const suggestions = useMemo(() => {
+    const claimId = priorityQuery.data?.[0]?.claim_id
+    return claimId
+      ? [`Explain why claim ${claimId} was flagged`, ...BASE_SUGGESTIONS]
+      : BASE_SUGGESTIONS
+  }, [priorityQuery.data])
 
   useEffect(() => {
     const node = logRef.current
@@ -139,7 +147,7 @@ export function CopilotPage() {
 
           <div className="border-t border-border p-3">
             <div className="mb-2 flex gap-1 overflow-x-auto pb-1">
-              {SUGGESTIONS.map((suggestion) => (
+              {suggestions.map((suggestion) => (
                 <Button
                   key={suggestion}
                   type="button"
