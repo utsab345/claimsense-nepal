@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --background: 39 33% 97%;
+    --surface: 0 0% 100%;
+    --card: 0 0% 100%;
+    --foreground: 210 14% 13%;
+    --muted: 40 18% 94%;
+    --muted-foreground: 210 8% 42%;
+    --border: 210 12% 88%;
+    --input: 210 12% 88%;
+    --primary: 151 37% 28%;
+    --primary-foreground: 0 0% 100%;
+    --warning: 34 82% 42%;
+    --warning-foreground: 40 33% 97%;
+    --destructive: 0 55% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --ring: 151 37% 28%;
+    --cell-y: 0.7rem;
+  }
+
+  .dark {
+    color-scheme: dark;
+    --background: 210 10% 10%;
+    --surface: 210 9% 14%;
+    --card: 210 9% 15%;
+    --foreground: 40 16% 94%;
+    --muted: 210 8% 19%;
+    --muted-foreground: 210 8% 66%;
+    --border: 210 8% 25%;
+    --input: 210 8% 25%;
+    --primary: 151 28% 52%;
+    --primary-foreground: 210 10% 10%;
+    --warning: 35 78% 60%;
+    --warning-foreground: 210 10% 10%;
+    --destructive: 0 58% 62%;
+    --destructive-foreground: 210 10% 10%;
+    --ring: 151 28% 52%;
+  }
+
+  html[data-density="compact"] {
+    --cell-y: 0.35rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01";
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply rounded bg-border;
+  }
+}
+
+@layer utilities {
+  .section-grid {
+    @apply grid gap-4 sm:grid-cols-2 xl:grid-cols-4;
+  }
+
+  .table-cell-y {
+    padding-top: var(--cell-y);
+    padding-bottom: var(--cell-y);
+  }
+
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.recharts-cartesian-axis-tick-value {
+  font-size: 11px;
+  fill: hsl(var(--muted-foreground));
+}
+
+.recharts-legend-item-text {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+}
