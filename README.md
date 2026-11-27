@@ -1,6 +1,6 @@
 # ClaimSense Nepal
 
-ClaimSense Nepal is an explainable motor insurance claim triage and analytics MVP for the Cognify System Pvt. Ltd. internship assessment. It provides claim management, analyst-oriented review priorities, trend summaries, and a database-grounded question assistant.
+ClaimSense Nepal is an explainable motor insurance claim triage and analytics MVP. It provides claim management, analyst-oriented review priorities, trend summaries, and a database-grounded question assistant.
 
 All records are synthetic, generated for this project, and do not represent actual insurance customers or Nepal insurance industry statistics.
 
