@@ -34,6 +34,26 @@ Claims teams need a consistent way to organize claims, find records that deserve
 
 <img width="1536" height="1024" alt="ClaimSense Nepal architecture" src="https://github.com/user-attachments/assets/8d98b3d1-abf8-46e2-bb17-a0111a485412" />
 
+```mermaid
+flowchart LR
+    CSV["Generated 2,500-row CSV"] --> Seed["Database initialization"]
+    Seed --> DB[("SQLite claims database")]
+
+    Analyst["Insurance analyst"] --> Browser["React workspace<br/>Vite + Tailwind + TanStack Query"]
+    Browser --> Proxy["nginx /api proxy"]
+    Proxy --> API["FastAPI routes"]
+
+    API --> Claims["Claims + export"]
+    API --> Risk["Risk engine<br/>rules + Isolation Forest"]
+    API --> Assistant["Assistant<br/>read-only query tools"]
+    API --> Investigation["Investigations + audit"]
+
+    Claims --> DB
+    Risk --> DB
+    Assistant --> DB
+    Investigation --> DB
+```
+
 The React workspace calls the FastAPI service, which owns claim reads and writes. The analytics, risk scoring, and assistant services use fixed SQLAlchemy expressions against the same SQLite database. The assistant cannot run user-supplied SQL.
 
 ## Technology stack
