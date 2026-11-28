@@ -3,7 +3,12 @@ import re
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
-from app.assistant.tools import financial_exposure, portfolio_summary, top_high_priority_claims
+from app.assistant.tools import (
+    financial_exposure,
+    portfolio_summary,
+    top_high_priority_claims,
+    under_review_claims,
+)
 from app.core.config import get_settings
 from app.models import Claim
 from app.schemas.assistant import AssistantAnswer
@@ -18,6 +23,13 @@ _HIGH_RISK_TERMS = (
     "high-priority",
     "highest priority",
     "highest-priority",
+)
+_UNDER_REVIEW_TERMS = (
+    "under review",
+    "in review",
+    "awaiting review",
+    "pending review",
+    "being reviewed",
 )
 
 
@@ -51,6 +63,8 @@ def answer_question(session: Session, question: str) -> AssistantAnswer:
         return _financial_exposure(session)
     if "summar" in normalized and "portfolio" in normalized:
         return _portfolio_summary(session)
+    if any(term in normalized for term in _UNDER_REVIEW_TERMS):
+        return _under_review_claims(session)
     if any(term in normalized for term in _HIGH_RISK_TERMS):
         if any(term in normalized for term in ("five", "top", "list", "show", "which", "what are")):
             return _top_high_priority_claims(session)
@@ -72,8 +86,8 @@ def answer_question(session: Session, question: str) -> AssistantAnswer:
     return _result(
         "unsupported",
         "I can answer questions about high-priority claims, financial exposure, portfolio summaries, "
-        "average claim amounts, incident-type amounts, claim risk explanations, unusual claims with "
-        "missing documents, and claims soon after policy start.",
+        "average claim amounts, incident-type amounts, claim risk explanations, claims under review, "
+        "unusual claims with missing documents, and claims soon after policy start.",
         [],
         supported=False,
         follow_ups=["Summarize the claims portfolio.", "What are the five highest-priority claims?"],
@@ -205,6 +219,41 @@ def _portfolio_summary(session: Session) -> AssistantAnswer:
         follow_ups=[
             "What are the five highest-priority claims?",
             "Were there claims within 14 days of policy start?",
+        ],
+    )
+
+
+def _under_review_claims(session: Session) -> AssistantAnswer:
+    result = under_review_claims(session)
+    if not result["total_claims"]:
+        return _result(
+            "under_review_claims",
+            "There are no claims in the database yet.",
+            ["Claims database"],
+            follow_ups=["Summarize the claims portfolio."],
+        )
+    count = result["count"]
+    claim_ids = result["claim_ids"]
+    if count:
+        answer = (
+            f"{count:,} of {result['total_claims']:,} claims are currently under review, "
+            f"totalling NPR {result['total_amount']:,.2f} in claimed amounts."
+        )
+        if claim_ids:
+            answer += f" Example claim IDs: {', '.join(claim_ids)}."
+            if count > len(claim_ids):
+                answer += " The list is limited to 10 claims."
+    else:
+        answer = f"No claims are currently under review among {result['total_claims']:,} stored claims."
+    return _result(
+        "under_review_claims",
+        answer,
+        ["Claims database", "Stored claim_status field"],
+        claim_ids=claim_ids,
+        calculation="COUNT(claims) WHERE claim_status = 'Under Review'",
+        follow_ups=[
+            "Summarize the claims portfolio.",
+            "What is the average claim amount?",
         ],
     )
 

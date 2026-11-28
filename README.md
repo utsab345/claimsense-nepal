@@ -120,7 +120,7 @@ The defaults are transparent heuristics for demonstrating the workflow. They hav
 
 ## Assistant architecture
 
-`POST /assistant/ask` recognizes supported question types and runs predefined SQLAlchemy queries for counts, averages, incident comparisons, early-policy claims, stored anomaly results, and stored claim explanations. Answers include a database citation or claim ID, the read-only tool that produced the answer, and supported follow-up questions. Unsupported questions receive an explicit response. It does not execute generated SQL, alter records, or send claim information to a third-party model. No LLM key or network access is required.
+`POST /assistant/ask` recognizes supported question types and runs predefined SQLAlchemy queries for counts (including live `Under Review` status counts), averages, incident comparisons, early-policy claims, stored anomaly results, and stored claim explanations. Answers include a database citation or claim ID, the read-only tool that produced the answer, and supported follow-up questions. Unsupported questions receive an explicit response. It does not execute generated SQL, alter records, or send claim information to a third-party model. No LLM key or network access is required.
 
 The assistant has intentionally limited language coverage. It can only answer from the supported query set and stored assessments. Claims that have not been assessed are not described as detected anomalies.
 

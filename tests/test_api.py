@@ -116,6 +116,23 @@ def test_application_seeds_synthetic_dataset(tmp_path):
     engine.dispose()
 
 
+def test_assistant_under_review_count_matches_seeded_status(tmp_path):
+    engine = create_database_engine(f"sqlite:///{tmp_path / 'under-review.db'}")
+    application = create_app(engine)
+
+    with TestClient(application) as test_client:
+        overview = test_client.get("/claims/analytics/overview").json()
+        answer = test_client.post(
+            "/assistant/ask", json={"question": "How many claims are under review?"}
+        ).json()
+
+    assert answer["supported"] is True
+    assert answer["tool"] == "under_review_claims"
+    assert f"{overview['under_review']:,} of {overview['total_claims']:,} claims" in answer["answer"]
+    assert answer["claim_ids"]
+    engine.dispose()
+
+
 def test_assessment_is_explained_and_never_changes_claim_status(client):
     payload = claim_payload()
     payload.update(

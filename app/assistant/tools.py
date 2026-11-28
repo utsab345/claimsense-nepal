@@ -11,6 +11,7 @@ READ_ONLY_TOOLS = (
     "high_priority_claims",
     "incident_amounts",
     "portfolio_summary",
+    "under_review_claims",
     "unusual_missing_documents",
 )
 
@@ -70,4 +71,27 @@ def portfolio_summary(session: Session) -> dict:
         "open_claims": row[3] or 0,
         "under_review": row[4] or 0,
         "anomalies": row[5] or 0,
+    }
+
+
+def under_review_claims(session: Session, limit: int = 10) -> dict:
+    status_filter = Claim.claim_status == "Under Review"
+    count, total_amount = session.execute(
+        select(
+            func.count(Claim.id),
+            func.coalesce(func.sum(Claim.claim_amount), 0.0),
+        ).where(status_filter)
+    ).one()
+    total_claims = session.scalar(select(func.count()).select_from(Claim)) or 0
+    claim_ids = session.scalars(
+        select(Claim.claim_id)
+        .where(status_filter)
+        .order_by(Claim.claim_date.desc(), Claim.claim_id)
+        .limit(limit)
+    ).all()
+    return {
+        "count": count or 0,
+        "total_claims": total_claims,
+        "total_amount": float(total_amount or 0.0),
+        "claim_ids": list(claim_ids),
     }

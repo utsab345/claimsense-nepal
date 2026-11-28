@@ -1,6 +1,7 @@
 from datetime import date
 
 import pytest
+from sqlalchemy import select
 
 from app.agent.service import answer_question
 from app.database.base import Base
@@ -84,7 +85,7 @@ def session(tmp_path):
                     incident_hour=12,
                     repair_cost=150_000,
                     supporting_documents_count=0,
-                    claim_status="Approved",
+                    claim_status="Under Review",
                     claim_date=date(2026, 3, 15),
                 ),
             ]
@@ -107,6 +108,33 @@ def test_assistant_answers_aggregates_with_database_citations(session):
     assert "CLM-00001" in high_priority.answer
     assert "Collision" in highest_incident.answer
     assert highest_incident.citations
+
+
+def test_assistant_counts_under_review_claims_from_live_status(session):
+    answer = answer_question(session, "How many claims are under review?")
+
+    assert answer.supported is True
+    assert answer.tool == "under_review_claims"
+    assert "1 of 3 claims are currently under review" in answer.answer
+    assert answer.claim_ids == ["CLM-00003"]
+    assert answer.citations
+    assert "claim_status" in answer.calculation
+
+    second = session.scalar(select(Claim).where(Claim.claim_id == "CLM-00002"))
+    second.claim_status = "Under Review"
+    session.commit()
+
+    updated = answer_question(session, "How many claims are under review?")
+    assert "2 of 3 claims are currently under review" in updated.answer
+    assert set(updated.claim_ids) == {"CLM-00002", "CLM-00003"}
+
+    for claim in session.scalars(select(Claim)).all():
+        claim.claim_status = "Paid"
+    session.commit()
+
+    empty = answer_question(session, "How many claims are under review?")
+    assert "No claims are currently under review" in empty.answer
+    assert empty.claim_ids == []
 
 
 def test_assistant_explains_claim_and_lists_assessed_outliers(session):

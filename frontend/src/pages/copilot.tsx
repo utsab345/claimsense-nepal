@@ -14,6 +14,7 @@ import { useCopilotSuggestions } from "@/hooks/use-copilot-suggestions"
 const PLACEHOLDERS = [
   "Ask why a claim was flagged…",
   "Ask about high-priority exposure…",
+  "Ask how many claims are under review…",
   "Ask for a portfolio summary…",
 ]
 
@@ -25,6 +26,7 @@ const TOOLS = [
   { name: "high_priority_claims", detail: "Claims with High review priority, ranked by score" },
   { name: "incident_amounts", detail: "Amounts grouped by incident category" },
   { name: "portfolio_summary", detail: "Counts and totals across the dataset" },
+  { name: "under_review_claims", detail: "Live count of claims in Under Review status" },
   { name: "unusual_missing_documents", detail: "Stored outliers with missing documents" },
 ]
 

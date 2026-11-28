@@ -6,6 +6,7 @@ import { api } from "@/lib/api"
 const BASE_SUGGESTIONS = [
   "What are the five highest-priority claims?",
   "What is the financial exposure of high-priority claims?",
+  "How many claims are under review?",
   "Which incident categories have the highest average claim amounts?",
   "Were there claims within 14 days of policy start?",
   "Summarize the claims portfolio.",
